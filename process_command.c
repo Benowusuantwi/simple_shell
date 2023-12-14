@@ -1,4 +1,4 @@
-#include "main"
+#include "main.h"
 
 void executecommand(char *args[]);
 
