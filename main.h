@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 
 #define MAX_COMMAND_LENGTH 100
 #define MAX_ARGS 10
