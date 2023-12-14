@@ -12,7 +12,9 @@
 #define MAX_COMMAND_LENGTH 100
 #define MAX_ARGS 10
 
+int main(void);
 extern char **environ;
 void process_command(char *command);
+void executecommand(char *args[]);
 
 #endif
