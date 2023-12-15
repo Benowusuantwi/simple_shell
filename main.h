@@ -14,7 +14,9 @@
 #define MAX_ARGS 10
 
 extern char **environ;
-void process_command(char *command);
-void executecommand(char *args[]);
+/*void process_command(char *command);*/
+void executecommand(char **args, char *argv0, size_t arg_count);
+char **tokenize(char *str, const char *delim);
+void get_path(char **command);
 
 #endif

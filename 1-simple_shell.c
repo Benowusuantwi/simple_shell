@@ -1,3 +1,4 @@
+#include "main.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -6,107 +7,99 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <fcntl.h>
-#include "main.h"
 
-void process_command(char *command);
+void executecommand(char **args, char *argv0, size_t arg_count);
 
 /**
  * main - a program that mimics the functons of a Unix shell
+ * @argc: arguments used
+ * @argv: argument vector
  * Return: 0 on success
  */
 
-int main(void)
+int main(__attribute__((unused)) int argc, char *argv[])
 {
-	char command[MAX_COMMAND_LENGTH];
+	char *command_line = NULL, **commands = NULL;
+	size_t command_length = 0, arg_count = 0;
+	ssize_t line_read;
 
 	while (1)
 	{
-		printf("$ ");
-		if (fgets(command, sizeof(command), stdin) == NULL)
+		if (isatty(STDIN_FILENO))
+			printf("$ ");
+		fflush(stdout);
+		line_read = getline(&command_line, &command_length, stdin);
+		++arg_count;
+
+		if (line_read == -1)
 		{
-			if (feof(stdin))
-			{
+			free(command_line);
+			command_line = NULL;
+			if (isatty(STDIN_FILENO))
 				printf("\n");
-				break;
-			}
-			else
-			{
-				perror("Error reading command");
-				exit(EXIT_FAILURE);
-			}
+			exit(0);
 		}
-
-		command[strcspn(command, "\n")] = '\0';
-
-		if (*command == '\0')
+		command_line[line_read - 1] = '\0';
+		if (*command_line == '\0')
 		{
+			free(command_line);
+			command_line = NULL;
 			continue;
 		}
-
-		process_command(command);
+		commands = tokenize(command_line, " ");
+		if (commands == NULL)
+		{
+			free(command_line);
+			command_line = NULL;
+			continue;
+		}
+		executecommand(commands, argv[0], arg_count);
+		freecommands(&commands);
+		free(command_line);
+		command_line = NULL;
 	}
 	return (0);
 }
 
-void executecommand(char *args[]);
-/**
- * process_command - a function that processes commands typed...
- * by the user
- * @command: input
- * Return: non
- */
-
-void process_command(char *command)
-{
-	char *args[MAX_ARGS], **environment = environ;
-	int arg_count = 0;
-
-	args[arg_count] = strtok(command, "");
-	while (args[arg_count] != NULL && arg_count < MAX_ARGS - 1)
-	{
-		arg_count++;
-		args[arg_count] = strtok(NULL, " ");
-	}
-	args[arg_count] = NULL;
-	if (strcmp(args[0], "exit") == 0)
-	{
-		printf("\n");
-		exit(EXIT_SUCCESS);
-	}
-	else if (strcmp(args[0], "env") == 0)
-	{
-		while (*environment != NULL)
-		{
-			printf("%s\n", *environment);
-			environment++;
-		}
-		return;
-	}
-	executecommand(args);
-}
 /**
  * executecommand - a function that executes input commands...
  * from the user
  * @args: input arguments from the user
+ * @argv0: argument vector
+ * @arg_count: argument counter
  * Return: non
  */
-void executecommand(char *args[])
+void executecommand(char **args, char *argv0, size_t arg_count)
 {
 	pid_t pid = fork();
+	int status;
+
+	if (access(args[0], X_OK) == -1)
+	{
+		get_path(&args[0]);
+		if (args != NULL && access(args[0], X_OK) == -1)
+		{
+			fprintf(stderr, "%s: %lu :%s: not found\n", argv0, arg_count, args[0]);
+			freecommands(args);
+			return;
+		}
+	}
 
 	if (pid == -1)
 	{
 		perror("Error forking");
+		freecommands(args);
 		exit(EXIT_FAILURE);
+		return;
 	}
 	if (pid == 0)
 	{
-		execvp(args[0], args);
-		perror(args[0]);
-		exit(EXIT_FAILURE);
+		if (execve(args[0], args, environ) == -1)
+			perror("execve");
 	}
 	else
 	{
-		waitpid(pid, NULL, 0);
+		waitpid(pid, &status, 0);
 	}
+	freecommands(args);
 }
