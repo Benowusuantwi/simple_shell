@@ -1,15 +1,39 @@
 #include "main.h"
+/**
+ * execute_command - a function that executes user commands
+ * @args: input arguments from the user
+ * Return: non
+ */
 
-void executecommand(char *args[]);
+void execute_command(char *args[])
+{
+	pid_t pid = fork();
+
+	if (pid == -1)
+	{
+		perror("Error forking");
+		exit(EXIT_FAILURE);
+	}
+	if (pid == 0)
+	{
+		execvp(args[0], args);
+		perror(args[0]);
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		waitpid(pid, NULL, 0);
+	}
+}
 
 /**
- * process_command - processes input from a user
+ * processcommand - processes input from a user
  * @command: command from user
  * Return: Non
  *
  */
 
-void process_command(char *command)
+void processcommand(char *command)
 {
 	char *args[MAX_ARGS], **environment = environ;
 	int arg_count = 0;
@@ -36,31 +60,5 @@ void process_command(char *command)
 		return;
 	}
 
-	executecommand(args);
-}
-/**
- * executecommand - a function that executes input commands...
- * from the user
- * @args: input arguments from the user
- * Return: non
- */
-void executecommand(char *args[])
-{
-	pid_t pid = fork();
-
-	if (pid == -1)
-	{
-		perror("Error forking");
-		exit(EXIT_FAILURE);
-	}
-	if (pid == 0)
-	{
-		execvp(args[0], args);
-		perror(args[0]);
-		exit(EXIT_FAILURE);
-	}
-	else
-	{
-		waitpid(pid, NULL, 0);
-	}
+	execute_command(args);
 }
