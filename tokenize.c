@@ -35,8 +35,9 @@ char **tokenize(char *str, const char *delim)
 
 		while (token != NULL)
 		{
-			tokens[i++] = strdup(token);
+			tokens[i] = strdup(token);
 			token = strtok(NULL, delim);
+			i++;
 		}
 		tokens[i] = NULL;
 		free(str_copy);
