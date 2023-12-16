@@ -18,5 +18,6 @@ extern char **environ;
 void executecommand(char **args, char *argv0, size_t arg_count);
 char **tokenize(char *str, const char *delim);
 void get_path(char **command);
+void freecommands(char **command);
 
 #endif

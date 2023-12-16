@@ -19,9 +19,11 @@ void executecommand(char **args, char *argv0, size_t arg_count);
 
 int main(__attribute__((unused)) int argc, char *argv[])
 {
-	char *command_line = NULL, **commands = NULL;
-	size_t command_length = 0, arg_count = 0;
+	char *command_line = NULL;
+	size_t command_length = 0, cmd_count = 0;
 	ssize_t line_read;
+
+	char **commands = tokenize("your command string", " ");
 
 	while (1)
 	{
@@ -29,7 +31,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
 			printf("$ ");
 		fflush(stdout);
 		line_read = getline(&command_line, &command_length, stdin);
-		++arg_count;
+		++cmd_count;
 
 		if (line_read == -1)
 		{
@@ -53,8 +55,9 @@ int main(__attribute__((unused)) int argc, char *argv[])
 			command_line = NULL;
 			continue;
 		}
-		executecommand(commands, argv[0], arg_count);
-		freecommands(&commands);
+		get_path(&commands[0]);
+		executecommand(commands, argv[0], cmd_count);
+		freecommands(commands);
 		free(command_line);
 		command_line = NULL;
 	}
